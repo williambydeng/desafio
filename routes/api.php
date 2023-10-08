@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LivroController;
+use App\Http\Controllers\IndiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,9 +23,6 @@ Route::post('/auth', [AuthController::class, 'register']);
 Route::post('/auth/token', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-
 Route::middleware('auth:sanctum')->group( function () {
-
-    Route::resource('users', UserController::class);
-
+    Route::resource('livros', LivroController::class);
 });
