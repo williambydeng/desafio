@@ -38,3 +38,37 @@ In order to start docker run:
 
 For more information, see the docs [here](https://laravel.com/docs/10.x/installation#getting-started-on-linux)
 
+
+### Running commands in Sail
+
+Now you'll need to run the migrations, in your app root folder run: 
+
+```bash
+./vendor/bin/sail php artisan migrate
+```
+
+Any php command you can run by adding ./vendor/bin/sail before
+
+### Creating user
+
+Send a POST request to /v1/auth in JSON format:
+
+```bash
+{
+    "name": "admin",
+    "password": "password",
+    "email": "example@example.com"
+}
+```
+
+### Getting the token
+
+Send a POST request to /v1/auth/token in JSON format:
+
+```bash
+{
+    "name": "admin",
+    "password": "password",
+}
+```
+
