@@ -40,4 +40,14 @@ class BaseRepository
         $model = $this->find($id);
         $model->delete();
     }
+
+    public function query()
+    {
+        return $this->model::query();
+    }
+
+    public function firstOrCreate(array $values = [])
+    {
+        return $this->model::firstOrCreate($values);
+    }
 }
