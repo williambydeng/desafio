@@ -9,7 +9,7 @@ use App\Services\IndiceService;
 use App\Http\Requests\LivroRequest; 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB; 
-use App\Helpers\XmlParser;
+use App\Jobs\ImportIndicesJob;
 
 class LivroController extends Controller
 {
@@ -54,24 +54,12 @@ class LivroController extends Controller
         }
     }
 
-    public function importIndicesFromXml(Request $request, $id, IndiceService $indiceService)
+    public function importIndicesFromXml(Request $request, $livroId)
     {
         $xmlData = $request->getContent();
 
-        try {
-            DB::beginTransaction();
-            $xml = simplexml_load_string($xmlData);
-            $structuredData = XmlParser::xmlToArray($xml);
-            $livro = $this->repository->find($id);
-       
-            $indiceService->insertIndices($livro, $structuredData);
-            DB::commit();
+        ImportIndicesJob::dispatch($xmlData, $livroId);
 
-            return response()->json("Livro salvo com sucesso!", 201);
-        } catch (\Exception $e) {
-            DB::rollback();
-
-            return response()->json("Falha ao salvar livro", 500);
-        }
+        return response()->json("XML recebido com sucesso!", 201);
     }
 }
