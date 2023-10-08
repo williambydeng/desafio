@@ -14,8 +14,6 @@ class IndiceService
 
             $indice = $livro->indices()->create($indiceData);
 
-            
-            // Check if there are subindices and recursively insert them
             if (isset($indiceData['subindices']) && is_array($indiceData['subindices'])) {
                 $this->insertSubIndices($indice, $indiceData['subindices']);
             }
@@ -33,4 +31,34 @@ class IndiceService
             }
         }
     }
+
+    public function searchLivrosByTituloAndIndice($query, $titulo, $tituloDoIndice)
+    {
+        $query->with('usuario_publicador', 'indices.subindices');
+
+        if ($titulo) {
+            $query->where('titulo', 'like', '%' . $titulo . '%');
+        }
+
+        if ($tituloDoIndice) {
+            $query->whereHas('indices', function ($subquery) use ($tituloDoIndice) {
+                $subquery->where('titulo', 'like', '%' . $tituloDoIndice . '%')
+                    ->orWhereHas('subindices', function ($subsubquery) use ($tituloDoIndice) {
+                        $subsubquery->where('titulo', 'like', '%' . $tituloDoIndice . '%');
+                        //$this->recursiveSubindicesQuery($subsubquery, $tituloDoIndice);
+                    });
+            });
+        }
+
+        return $query->get();
+    }
+
+    private function recursiveSubindicesQuery($query, $tituloDoIndice)
+    {
+        $query->orWhereHas('subindices', function ($subquery) use ($tituloDoIndice) {
+            $subquery->where('titulo', 'like', '%' . $tituloDoIndice . '%');
+            $this->recursiveSubindicesQuery($subquery, $tituloDoIndice); // Recursive call
+        });
+    }
+
 }

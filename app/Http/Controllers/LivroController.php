@@ -5,55 +5,73 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Livro;
 use App\Repositories\LivroRepository;
+use App\Services\IndiceService;
+use App\Http\Requests\LivroRequest; 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; 
+use App\Helpers\XmlParser;
 
 class LivroController extends Controller
 {
-    protected $livroRepository;
+    protected $repository;
 
     public function __construct(LivroRepository $livroRepository)
     {
-        $this->livroRepository = $livroRepository;
+        $this->repository = $livroRepository;
     }
 
-    public function index()
+    public function index(Request $request, IndiceService $indiceService)
     {
-        $livros = $this->livroRepository->all();
+        $query = $this->repository->query();
+        $indiceService->searchLivrosByTituloAndIndice(
+            $query,
+            $request->input('titulo'),
+            $request->input('titulo_do_indice')
+        );
+
+        $livros = $query->get()->each->setHidden(['id','usuario_publicador_id']);
+
         return response()->json($livros);
     }
 
-    public function store(Request $request)
+    public function store(LivroRequest $request, IndiceService $indiceService)
     {
-        $validatedData = $request->validate([
-            'titulo' => 'required|string',
-            'usuario_publicador_id' => 'required|integer',
-        ]);
+        try {
+            DB::beginTransaction();
+            $livro = $this->repository->create([
+                'titulo' => $request->titulo,
+                'usuario_publicador_id' => Auth::id()
+            ]);
+            
+            $indiceService->insertIndices($livro, $request->input('indices'));
+            DB::commit();
 
-        $livro = $this->livroRepository->create($validatedData);
+            return response()->json("Livro salvo com sucesso!", 201);
+        } catch (\Exception $e) {
+            DB::rollback();
 
-        return response()->json($livro, 201);
+            return response()->json("Falha ao salvar livro", 500);
+        }
     }
 
-    public function show(Livro $livro)
+    public function importIndicesFromXml(Request $request, $id, IndiceService $indiceService)
     {
-        return response()->json($livro);
-    }
+        $xmlData = $request->getContent();
 
-    public function update(Request $request, Livro $livro)
-    {
-        $validatedData = $request->validate([
-            'titulo' => 'required|string',
-            'usuario_publicador_id' => 'required|integer',
-        ]);
+        try {
+            DB::beginTransaction();
+            $xml = simplexml_load_string($xmlData);
+            $structuredData = XmlParser::xmlToArray($xml);
+            $livro = $this->repository->find($id);
+       
+            $indiceService->insertIndices($livro, $structuredData);
+            DB::commit();
 
-        $this->livroRepository->update($validatedData);
+            return response()->json("Livro salvo com sucesso!", 201);
+        } catch (\Exception $e) {
+            DB::rollback();
 
-        return response()->json($livro);
-    }
-
-    public function destroy(Livro $livro)
-    {
-        $this->livroRepository->delete();
-
-        return response()->json(['message' => 'Livro deleted']);
+            return response()->json("Falha ao salvar livro", 500);
+        }
     }
 }
