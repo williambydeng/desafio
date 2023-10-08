@@ -4,7 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LivroController;
-use App\Http\Controllers\IndiceController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,4 +24,5 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 
 Route::middleware('auth:sanctum')->group( function () {
     Route::resource('livros', LivroController::class);
+    Route::post('livros/{id}/importar-indices-xml', [LivroController::class, 'importIndicesFromXml']);
 });

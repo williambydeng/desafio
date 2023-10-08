@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('indices', function (Blueprint $table) {
             $table->id();
-            $table->integer('livro_id');
+            $table->integer('livro_id')->nullable();
             $table->integer('indice_pai_id')->nullable();
             $table->string('titulo');
             $table->integer('pagina');
