@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 use App\Models\User;
+use App\Models\Livro;
 
 class LivroControllerTest extends TestCase
 {
@@ -10,6 +11,8 @@ class LivroControllerTest extends TestCase
 
     public function testIndex()
     {
+        $livros = Livro::factory(3)->create();
+
         $user = User::factory()->create();
         $response = $this->actingAs($user)->get('/v1/livros');     
         $response->assertStatus(200);
